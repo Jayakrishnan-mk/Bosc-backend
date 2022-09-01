@@ -25,8 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //routes..........................
-app.use('/album' , require('./server/routes/albumRouter'));
-app.use('/user' , require('./server/Routes/userRouter'));
+app.use('/album', require('./server/routes/albumRouter'));
+app.use('/user', require('./server/Routes/userRouter'));
 
 
 app.use((err, req, res, next) => {

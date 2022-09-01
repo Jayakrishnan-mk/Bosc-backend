@@ -6,15 +6,14 @@ module.exports.checkUser = (req, res, next) => {
     if (token) {
         jwt.verify(token, process.env.JWT_SECRET, async (err, decodedToken) => {
             if (err) {
-                res.json({ message:'Invalid Token',status: false })
+                res.json({ message: 'Invalid Token', status: false })
             } else {
                 const user = await User.findById(decodedToken.id);
                 if (user) {
                     req.user = user;
-                    // console.log('eeeerrrrrrrrrrrrrrrrr');
                     next();
                 } else {
-                    res.json({ message:"User Not Found", status: false })
+                    res.json({ message: "User Not Found", status: false })
                 }
             }
         });
