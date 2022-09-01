@@ -1,13 +1,14 @@
-const { userCreate, isUserExist } = require("../Services/userServices");
+const { userCreate, isUserExist, userLogin, userByIdService, updateUser, deleteUser, profilePicChanger } = require("../Services/userServices");
+const { createToken } = require("../utils/generateToken");
 
 const create = async (req, res) => {
     try {
-        console.log('ww', req.body);
+        // console.log('ww', req.body);
         const exist = await isUserExist(req.body.email, req.body.userName);
-        console.log('qqqqqq', exist);
+        // console.log('qqqqqq', exist);
         if (!exist) {
             const pic = req.file ? req.file.path : "https://www.w3schools.com/howto/img_avatar.png";
-            console.log('a',req.file);
+            // console.log('a', req.file);
             const user = await userCreate(req.body, pic);
             return res.status(200).json(user)
         }
@@ -16,9 +17,94 @@ const create = async (req, res) => {
         }
 
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: error.message })
     }
-} 
+}
 
 
-module.exports = { create };
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        // console.log('reeeeeeeeeeeeeeeeeeeeeeeeech',email, password);
+        const user = await userLogin(email, password);
+        // console.log('userrrrr', user);
+        if(user) {
+
+            const token = createToken(user?._id, 'user')
+            res.status(200).json({ user: user._id, created: true, token })
+        }
+        else {
+            res.json({error: "Invalid Credentials"})
+        }
+        // console.log('token', token);
+
+    } catch (error) {
+        res.json({ error: "Invalid User id and Password", created: false })
+    }
+}
+
+
+const UserDetails = async (req, res) => {
+    const userId = req.params.id;
+    const user = await userByIdService(userId);
+    return res.status(200).json(user);
+}
+
+const editProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { firstName,
+            lastName,
+            email,
+            password } = req.body;
+        await updateUser(
+            userId,
+            firstName,
+            lastName,
+            email,
+            password
+        )
+        const user = await userByIdService(userId);
+        return res.status(200).json({
+            message: "User updated successfully",
+            user
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Something went wrong", error })
+    }
+}
+
+
+const deleteProfile = async (req, res) => {
+    // console.log('backend reaaaaaaa');
+    try {
+        // console.log('dddddddd', req.user._id)
+        await deleteUser(req.user._id)
+        res.status(200).json({message: "Deleted successfully.👍"})
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error.message })
+    }
+}
+
+
+const updateDp = async (req, res) => {
+    try {
+        const image = req.file.path;
+        const userId = req.user._id;
+        const user = await profilePicChanger(userId, image);
+        return res.status(200).json({
+            created: true,
+            message: "Profile image updated successfully",
+            user
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Something went wrong", error })
+    }
+}
+
+
+module.exports = { create, login, UserDetails, editProfile, deleteProfile, updateDp };
